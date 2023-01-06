@@ -26,11 +26,8 @@ class Publication:
 
         self.title = details['title']
         self.authors = self._format_authors(details['persons'])
-        doi = details['doi']
-        if doi:
-            self.add_link_from_doi(doi)
-        else:
-            self.add_link_from_harvard(details['harvard'])
+
+        self.add_link(details['harvard'], details['doi'])
         self.description = ""
         if not (self.title and self.authors and self.link_url):
             logging.warning("Unknown details for Pure ID: %s", pure_id)
@@ -52,16 +49,32 @@ class Publication:
         self.link_url = doi
         self.link_display = doi_number[0]
 
-    def add_link_from_harvard(self, harvard: str):
-        """Extract URLs from Harvard text and use the first as the link for this publication"""
+    def add_link(self, harvard: str, doi: str):
+        """Extract eprints URL from Harvard text. If none found, use the DOI or the first URL in the Harvard text."""
         urls = re.findall(self.URL_REGEX, harvard)
         if len(urls) == 0:
-            logging.warning("No URLs found in Harvard text for Pure ID: %s", self.pure_id)
+            if doi:
+                logging.warning("No URLs found in Harvard text, using DOI backup, for Pure ID: %s", self.pure_id)
+                self.add_link_from_doi(doi)
+            else:
+                logging.warning("No URLs found for Pure ID: %s", self.pure_id)
             return
-        if "eprints.soton.ac.uk" not in urls[0]:
-            logging.warning("Found non eprints.soton.ac.uk link in Harvard text for Pure ID %s: %s", self.pure_id,
-                            urls[0])
-        self.link_url = urls[0]
+
+        eprints_urls = list(filter(lambda s: "eprints.soton.ac.uk" in s, urls))
+        if 1 < len(eprints_urls):
+            logging.warning("Too many eprints URLs found for Pure ID %s: %s", self.pure_id, len(eprints_urls))
+        elif 0 == len(eprints_urls):
+            if doi:
+                self.add_link_from_doi(doi)
+                return
+            if 1 <= len(urls):
+                logging.warning("No eprints URLs found for Pure ID %s, using URL: %s", self.pure_id, urls[0])
+                self.link_url = urls[0]
+                self.link_display = self.NO_DOI_LINK_DISPLAY
+                return
+            else:
+                logging.warning("No links found for Pure ID %s", self.pure_id)
+        self.link_url = eprints_urls[0]
         self.link_display = self.NO_DOI_LINK_DISPLAY
 
     def __str__(self):
