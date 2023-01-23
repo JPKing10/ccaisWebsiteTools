@@ -28,6 +28,7 @@ class Publication:
         self.authors = self._format_authors(details['persons'])
         self.first_author = details['persons'][0]['lastname']
         self.year = details['year']
+        self.harvard = details['harvard']
 
         self.add_link(details['harvard'], details['doi'])
         self.description = ""
@@ -86,6 +87,7 @@ class Publication:
         pub_str += "  description: " + self.description + "\n"
         pub_str += "  authors: " + self.authors + "\n"
         pub_str += "  year: " + str(self.year) + "\n"
+        pub_str += "  harvard: |\n    " + self.harvard + "\n"
         pub_str += "  link:\n"
         pub_str += "    url: " + self.link_url + "\n"
         pub_str += "    display: " + self.link_display + "\n"
