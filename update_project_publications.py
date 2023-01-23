@@ -132,15 +132,25 @@ def write_publications(output_path: str, publications: List[Publication]):
             f.write("\n")
 
 
-def main(output_path: Optional[str] = None):
+def main(output_path: Optional[str] = None) -> int:
+    """Updates the publication list and saves to the specified file, or writes to stdout.
+    Returns 0 if the update completed successfully, or 1 if the update was aborted."""
     publication_ids = get_publication_ids()
+    if publication_ids is None:
+        logging.error("No publication list retrieved. Is the Pure API available? Update aborted.")
+        return 1
     with multiprocessing.Pool(NUM_PROCESSES) as pool:
         publications = pool.map(enrich_publication, publication_ids)
+    if None in publications:
+        logging.error("Failed to retrieve details for all publications. Update aborted.")
+        return 1
     if output_path:
         write_publications(output_path, publications)
     else:
         for p in publications:
             print(p)
+    logging.info("Update complete. %s publications found.", len(publications))
+    return 0
 
 
 if __name__ == '__main__':
