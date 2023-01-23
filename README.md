@@ -6,6 +6,8 @@ Tools for the CCAIS website.
 
 Runs the update script targeting the specified website repository. Publications are updated and the resulting publist.yml is pushed to remote.
 
+For intervention-free updates, git should be configured for push/pull without intervention (e.g. use SSH keys).
+
 Repository publist path: `_data/publist.yml`
 
 Logfile: `orchestration.log`
