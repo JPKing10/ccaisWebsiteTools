@@ -26,6 +26,8 @@ class Publication:
 
         self.title = details['title']
         self.authors = self._format_authors(details['persons'])
+        self.first_author = details['persons'][0]['lastname']
+        self.year = details['year']
 
         self.add_link(details['harvard'], details['doi'])
         self.description = ""
@@ -83,6 +85,7 @@ class Publication:
         pub_str += "- title: \"" + self.title + "\"\n"
         pub_str += "  description: " + self.description + "\n"
         pub_str += "  authors: " + self.authors + "\n"
+        pub_str += "  year: " + str(self.year) + "\n"
         pub_str += "  link:\n"
         pub_str += "    url: " + self.link_url + "\n"
         pub_str += "    display: " + self.link_display + "\n"
@@ -138,8 +141,8 @@ def write_publications(output_path: str, publications: List[Publication]):
 
 
 def main(output_path: Optional[str] = None) -> int:
-    """Updates the publication list and saves to the specified file, or writes to stdout.
-    Returns 0 if the update completed successfully, or 1 if the update was aborted."""
+    """Updates the publication list and saves to the specified file, or writes to stdout. Ordered by year and
+    first author. Returns 0 if the update completed successfully, or 1 if the update was aborted."""
     logging.info("Starting publications update.")
     publication_ids = get_publication_ids()
     if publication_ids is None:
@@ -150,6 +153,7 @@ def main(output_path: Optional[str] = None) -> int:
     if None in publications:
         logging.error("Failed to retrieve details for all publications. Update aborted.")
         return 1
+    publications.sort(key=lambda x: (-x.year, x.first_author))
     if output_path:
         write_publications(output_path, publications)
     else:
