@@ -93,18 +93,23 @@ def rest_get(base_url: str, endpoint: str, query: str) -> Optional[Dict[str, Any
     """Execute GET request and return the json content."""
     url = base_url + "/" + endpoint + "/" + query
     headers = {"accept": "application/json"}
-    response = requests.get(url, headers=headers)
+    try:
+        response = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError as e:
+        logging.error(e)
+        logging.info("Is the Pure API available?")
+        return None
     if response.status_code != 200:
         logging.error("GET Did not succeed with status code %s\n\t Request: %s", response.status_code, url)
         return None
     return response.json()
 
 
-def get_publication_ids() -> List[str]:
+def get_publication_ids() -> Optional[List[str]]:
     """A list of the publication Pure IDs."""
     project_publications = rest_get(BASE_URL, "project", PROJECT_ID)
     if project_publications is None:
-        raise Exception("Could not retrieve publication IDs")
+        return None
     publication_ids = []
     for publication in project_publications['outputs']:
         publication_ids.append(publication['pureId'])
@@ -135,6 +140,7 @@ def write_publications(output_path: str, publications: List[Publication]):
 def main(output_path: Optional[str] = None) -> int:
     """Updates the publication list and saves to the specified file, or writes to stdout.
     Returns 0 if the update completed successfully, or 1 if the update was aborted."""
+    logging.info("Starting publications update.")
     publication_ids = get_publication_ids()
     if publication_ids is None:
         logging.error("No publication list retrieved. Is the Pure API available? Update aborted.")
