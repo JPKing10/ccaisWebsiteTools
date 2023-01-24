@@ -87,7 +87,7 @@ class Publication:
         pub_str += "  description: " + self.description + "\n"
         pub_str += "  authors: " + self.authors + "\n"
         pub_str += "  year: " + str(self.year) + "\n"
-        pub_str += "  harvard: |\n    " + self.harvard + "\n"
+        pub_str += "  harvard: |\n    " + self.harvard[:-6] + "\n"  # remove closing div, hack for inclusion on website
         pub_str += "  link:\n"
         pub_str += "    url: " + self.link_url + "\n"
         pub_str += "    display: " + self.link_display + "\n"
